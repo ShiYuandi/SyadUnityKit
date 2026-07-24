@@ -4,6 +4,24 @@ SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运�
 
 支持 Unity **2019.4 LTS 及以上版本**，包括 Unity 2022.3 LTS。
 
+## 安装
+
+在 Unity 中打开 **Window > Package Manager**，点击左上角的 **+**，选择 **Add package from git URL**，输入：
+
+```text
+https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.1.0
+```
+
+也可以在目标项目的 `Packages/manifest.json` 的 `dependencies` 中加入：
+
+```json
+"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.1.0"
+```
+
+地址末尾的 `#v0.1.0` 表示锁定到稳定的 `0.1.0` 版本。更新框架时，应把它改成需要安装的新版本标签。
+
+卸载时，通过 Package Manager 点击 **Remove**，或者从 `manifest.json` 中删除该依赖。卸载前应先移除场景和 Prefab 上依赖本框架的组件。
+
 ## 设计边界
 
 - 使用具体 `UIView` 类型标识页面，不使用字符串页面名。
