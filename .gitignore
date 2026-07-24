@@ -1,0 +1,70 @@
+# Unity 自动生成目录
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Ee]xported[Oo]bj/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# 构建产物
+/[Bb]uild/
+/[Bb]uilds/
+*.apk
+*.aab
+*.app
+*.unitypackage
+*.unitypackage.meta
+
+# Unity / Visual Studio 自动生成的工程文件
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+*.opendb
+*.VC.db
+*.sln.DotSettings.user
+
+# IDE 缓存
+/.vs/
+/.idea/
+/.vscode/
+/.consulo/
+
+# Rider 自动安装的 Unity 插件
+/Assets/Plugins/Editor/JetBrains*
+
+# Gradle 缓存
+/.gradle/
+
+# 测试与覆盖率产物
+/TestResults/
+/CodeCoverage/
+test-results.xml
+
+# Addressables 构建产物
+/Assets/AddressableAssetsData/*/*.bin*
+/Assets/StreamingAssets/aa.meta
+/Assets/StreamingAssets/aa/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+Desktop.ini
+sysinfo.txt
+
+# 本地 AI 工具状态，不属于 Unity 工程
+/.agents/
+/.codex/

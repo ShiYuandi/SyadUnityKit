@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a22e3ee4445ed14794c93e3415ecc44, type: 3}
+  m_Name: GameUIViewCatalog
+  m_EditorClassIdentifier: 
+  _entries:
+  - _prefab: {fileID: 5251183961896712010, guid: 4e139827319a47449aa14c3dfe5bb3fd, type: 3}
+    _layer: 100
+    _cachePolicy: 0
+    _duplicatePolicy: 0

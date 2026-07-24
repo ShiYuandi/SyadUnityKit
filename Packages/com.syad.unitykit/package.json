@@ -1,0 +1,16 @@
+{
+  "name": "com.syad.unitykit",
+  "version": "0.1.0",
+  "displayName": "SYAD Unity Kit",
+  "description": "一套小型、显式、便于理解和扩展的 Unity 运行时基础框架。",
+  "unity": "2019.4",
+  "author": {
+    "name": "SYAD"
+  },
+  "keywords": [
+    "syad",
+    "ui",
+    "framework"
+  ],
+  "license": "MIT"
+}
