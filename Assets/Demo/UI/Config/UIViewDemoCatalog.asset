@@ -10,18 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a22e3ee4445ed14794c93e3415ecc44, type: 3}
-  m_Name: GameUIViewCatalog
+  m_Name: UIViewDemoCatalog
   m_EditorClassIdentifier: 
   _entries:
-  - _prefab: {fileID: 5251183961896712010, guid: 4e139827319a47449aa14c3dfe5bb3fd, type: 3}
+  - _prefab: {fileID: 5251183961896712010, guid: 4e139827319a47449aa14c3dfe5bb3fd,
+      type: 3}
     _layer: 100
     _cachePolicy: 0
     _duplicatePolicy: 0
-  - _prefab: {fileID: 4597289661186847303, guid: 9b01e9801e990f04baab0756329252ec, type: 3}
+  - _prefab: {fileID: 4597289661186847303, guid: 9b01e9801e990f04baab0756329252ec,
+      type: 3}
     _layer: 100
     _cachePolicy: 0
     _duplicatePolicy: 0
-  - _prefab: {fileID: 6475580834142704965, guid: fe8fba0f85c56714ca419149c7ef6619, type: 3}
+  - _prefab: {fileID: 6475580834142704965, guid: fe8fba0f85c56714ca419149c7ef6619,
+      type: 3}
     _layer: 100
     _cachePolicy: 0
     _duplicatePolicy: 0

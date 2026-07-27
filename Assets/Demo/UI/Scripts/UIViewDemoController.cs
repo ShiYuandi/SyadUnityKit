@@ -1,7 +1,7 @@
 ﻿using Syad.UnityKit.UI;
 using UnityEngine;
 
-public sealed class MainSystem : MonoBehaviour
+public sealed class UIViewDemoController : MonoBehaviour
 {
     [SerializeField] private UIRoot _uiRoot;
     [SerializeField] private UIViewCatalog _catalog;

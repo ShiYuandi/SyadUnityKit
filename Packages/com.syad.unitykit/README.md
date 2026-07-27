@@ -1,6 +1,6 @@
 # SYAD Unity Kit
 
-SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运行时基础框架。`0.1.0` 版本只包含 UI 生命周期与页面管理内核；游戏状态、业务数据和“当前应该显示什么”仍由具体项目负责。
+SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运行时基础框架。稳定版 `0.1.0` 包含 UI 生命周期与页面管理内核；开发分支还包含尚未发布的输入命令路由模块。游戏状态、业务数据和“收到输入后应该做什么”仍由具体项目负责。
 
 支持 Unity **2019.4 LTS 及以上版本**，包括 Unity 2022.3 LTS。
 
@@ -30,6 +30,96 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 - View 通过明确的方法接收数据，通过普通 C# 事件发出用户操作意图。
 - 项目级 Controller 根据业务状态决定显示哪个 View。
 - 不提供全局 EventBus、Service Locator、单例或反射自动注册。
+
+## 输入命令路由（开发中）
+
+不同项目可能使用键盘、UDP、RFID、Kinect 或串口，但业务层真正关心的通常是“返回”“向左”“确认”等命令。`InputRouter<TCommand>` 用一个显式创建的实例统一转发这些强类型命令，并提供输入开关和全局冷却。
+
+它不会读取具体设备、解析通信协议或切换页面，这些工作仍由项目代码负责。所有命令共享同一段冷却时间，适合防止页面切换动画期间连续触发。
+
+`TryDispatch()` 应从 Unity 主线程调用。如果 UDP、串口等接收器在后台线程工作，应先把解析结果放入线程安全队列，再在 `Update()` 中取出并提交；`InputRouter<TCommand>` 不会自动切换线程。
+
+```csharp
+using Syad.UnityKit.Input;
+using UnityEngine;
+
+public enum ExhibitCommand
+{
+    Back,
+    Left,
+    Right,
+    Confirm
+}
+
+public sealed class ExhibitInputController : MonoBehaviour
+{
+    private InputRouter<ExhibitCommand> _inputRouter;
+
+    private void Awake()
+    {
+        // 每次成功输入后，0.5 秒内忽略后续输入。
+        _inputRouter = new InputRouter<ExhibitCommand>(0.5f);
+        _inputRouter.CommandReceived += HandleCommand;
+    }
+
+    private void Update()
+    {
+        // 键盘只是一个调试输入源。
+        if (UnityEngine.Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            _inputRouter.TryDispatch(ExhibitCommand.Left);
+        }
+
+        if (UnityEngine.Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            _inputRouter.TryDispatch(ExhibitCommand.Right);
+        }
+    }
+
+    // UDP、RFID 等输入源解析完成后，也调用同一个入口。
+    public void OnUdpMessageReceived(string message)
+    {
+        if (message == "left")
+        {
+            _inputRouter.TryDispatch(ExhibitCommand.Left);
+        }
+    }
+
+    private void HandleCommand(ExhibitCommand command)
+    {
+        // 在这里把命令交给项目状态机或 UI Controller。
+        Debug.Log("收到输入命令：" + command);
+    }
+
+    private void OnDestroy()
+    {
+        if (_inputRouter != null)
+        {
+            _inputRouter.CommandReceived -= HandleCommand;
+            _inputRouter.Dispose();
+        }
+    }
+}
+```
+
+常用接口：
+
+```csharp
+// 尝试转发命令；处于禁用或冷却状态时返回 false。
+bool accepted = inputRouter.TryDispatch(command);
+
+// 临时停止和恢复输入。
+inputRouter.SetEnabled(false);
+inputRouter.SetEnabled(true);
+
+// 清除剩余冷却时间，使下一条命令可以立即通过。
+inputRouter.ResetCooldown();
+
+// 释放并清理全部订阅；释放后不能继续使用。
+inputRouter.Dispose();
+```
+
+`InputRouter<TCommand>` 是项目局部对象，不是全局事件总线。应由项目的组合入口或输入控制器持有，并在该对象销毁时调用 `Dispose()`。
 
 ## 场景配置
 
