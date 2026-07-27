@@ -116,4 +116,4 @@ SyadUnityKit
 
 ## 许可证
 
-使用 MIT License，详见 [LICENSE.md](Packages/com.syad.unitykit/LICENSE.md)。
+使用 MIT License，详见 [LICENSE.md](LICENSE.md)。UPM 包目录中同时保留一份相同的许可证，确保通过 Git 安装后仍能查看授权协议。
