@@ -1,8 +1,23 @@
 # SYAD Unity Kit
 
-SYAD Unity Kit 是一套小型、显式、便于理解和扩展的 Unity 运行时基础框架。目前 `0.1.0` 版本提供 UI 生命周期、页面目录、层级管理、缓存与释放策略。
+SYAD Unity Kit 是一套小型、显式、便于理解和扩展的 Unity 运行时基础框架。`0.2.0` 提供 UI 生命周期管理与强类型输入命令路由。
 
 支持 Unity **2019.4 LTS 及以上版本**，并保持与 Unity 2022.3 LTS 兼容。
+
+## 包含模块
+
+| 模块 | 命名空间 | 主要能力 |
+|---|---|---|
+| UI | `Syad.UnityKit.UI` | 页面目录、层级、生命周期、缓存、重复实例和释放策略 |
+| Input | `Syad.UnityKit.Input` | 强类型命令转发、输入启停、全局冷却和冷却重置 |
+
+框架不提供全局 EventBus、Service Locator、单例或反射自动注册。具体设备读取、通信协议、业务状态和页面导航仍由项目代码负责。
+
+详细资料：
+
+- [包使用文档](Packages/com.syad.unitykit/README.md)
+- [InputRouter 详解](Packages/com.syad.unitykit/Documentation~/InputRouter详解.md)
+- [版本变更记录](Packages/com.syad.unitykit/CHANGELOG.md)
 
 ## 通过 Git 安装
 
@@ -20,7 +35,7 @@ SYAD Unity Kit 是一套小型、显式、便于理解和扩展的 Unity 运行�
 4. 粘贴下面的地址：
 
 ```text
-https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.1.0
+https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.2.0
 ```
 
 5. 点击 **Add**，等待 Unity 下载并编译完成。
@@ -34,7 +49,7 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 ```json
 {
   "dependencies": {
-    "com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.1.0"
+    "com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.2.0"
   }
 }
 ```
@@ -46,6 +61,7 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 在项目脚本中加入：
 
 ```csharp
+using Syad.UnityKit.Input;
 using Syad.UnityKit.UI;
 ```
 
@@ -56,13 +72,13 @@ using Syad.UnityKit.UI;
 框架使用 Git 标签发布稳定版本。更新时，把安装地址末尾的标签改为目标版本：
 
 ```text
-#v0.1.0
+#v0.2.0
 ```
 
-例如未来更新到 `0.1.1`：
+例如未来更新到 `0.3.0`：
 
 ```text
-https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.1.1
+https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.3.0
 ```
 
 建议项目始终指定明确标签，不要直接依赖开发分支，以免框架更新导致项目意外变化。
@@ -74,14 +90,16 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 如果通过 `manifest.json` 安装，则删除下面这一项并保存：
 
 ```json
-"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.1.0"
+"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.2.0"
 ```
 
 卸载前请先移除场景和 Prefab 上依赖本框架的组件，否则 Unity 会显示 Missing Script。
 
 ## 快速开始
 
-安装后需要：
+### UI
+
+使用 UI 模块需要：
 
 1. 在 Canvas 下创建并配置 `UIRoot`。
 2. 创建继承自 `UIView` 的项目页面。
@@ -91,18 +109,47 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 
 完整示例和 API 说明请阅读 [框架使用文档](Packages/com.syad.unitykit/README.md)。
 
+### Input
+
+先定义项目自己的命令，再创建并持有 `InputRouter<TCommand>`：
+
+```csharp
+using Syad.UnityKit.Input;
+
+public enum ExhibitCommand
+{
+    Left,
+    Right,
+    Confirm
+}
+
+InputRouter<ExhibitCommand> inputRouter =
+    new InputRouter<ExhibitCommand>(0.5f);
+
+inputRouter.CommandReceived += HandleCommand;
+inputRouter.TryDispatch(ExhibitCommand.Left);
+```
+
+输入源负责把键盘、UDP、RFID、Kinect 等原始信号转换为命令；InputRouter 负责启停、冷却和转发；项目 Controller 负责实际业务。详细说明请阅读 [《InputRouter 详解》](Packages/com.syad.unitykit/Documentation~/InputRouter详解.md)。
+
 ## 仓库结构
 
 ```text
 SyadUnityKit
-├─ Assets                         示例场景与项目级验证代码
+├─ Assets
+│  └─ Demo
+│     ├─ UI                       UI 页面管理示例
+│     └─ Input                    输入源与命令路由示例
 ├─ Packages
-│  └─ com.syad.unitykit           可复用的 UPM 框架源码
+│  └─ com.syad.unitykit
+│     ├─ Runtime                  可复用的 UPM 框架源码
+│     ├─ Tests                    PlayMode 自动化测试
+│     └─ Documentation~           详细文档
 ├─ ProjectSettings                Unity 项目设置
 └─ README.md
 ```
 
-`Assets` 中的 `StartView`、`test` 和示例场景用于演示与验证，不属于框架内核。通过 Git URL 安装时，Unity 只会安装 `Packages/com.syad.unitykit`，不会把整个示例工程导入目标项目。
+`Assets/Demo` 中的场景和脚本用于演示与验证，不属于框架内核。通过 Git URL 安装时，Unity 只会安装 `Packages/com.syad.unitykit`，不会把整个示例工程导入目标项目。
 
 ## 本地开发
 
@@ -112,7 +159,7 @@ SyadUnityKit
 2. 在 `Assets` 中编写示例验证真实使用流程。
 3. 使用 Unity Test Framework 运行包测试。
 4. 更新 `package.json` 版本号与 `CHANGELOG.md`。
-5. 提交 Git，并创建与包版本一致的标签，例如 `v0.1.0`。
+5. 提交 Git，并创建与包版本一致的标签，例如 `v0.2.0`。
 
 ## 许可证
 

@@ -1,6 +1,6 @@
 # SYAD Unity Kit
 
-SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运行时基础框架。稳定版 `0.1.0` 包含 UI 生命周期与页面管理内核；开发分支还包含尚未发布的输入命令路由模块。游戏状态、业务数据和“收到输入后应该做什么”仍由具体项目负责。
+SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运行时基础框架。`0.2.0` 提供 UI 生命周期与页面管理，以及强类型输入命令路由。游戏状态、业务数据、“当前应该显示什么”和“收到输入后应该做什么”仍由具体项目负责。
 
 支持 Unity **2019.4 LTS 及以上版本**，包括 Unity 2022.3 LTS。
 
@@ -9,16 +9,16 @@ SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运�
 在 Unity 中打开 **Window > Package Manager**，点击左上角的 **+**，选择 **Add package from git URL**，输入：
 
 ```text
-https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.1.0
+https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.2.0
 ```
 
 也可以在目标项目的 `Packages/manifest.json` 的 `dependencies` 中加入：
 
 ```json
-"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.1.0"
+"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.2.0"
 ```
 
-地址末尾的 `#v0.1.0` 表示锁定到稳定的 `0.1.0` 版本。更新框架时，应把它改成需要安装的新版本标签。
+地址末尾的 `#v0.2.0` 表示锁定到稳定的 `0.2.0` 版本。更新框架时，应把它改成需要安装的新版本标签。
 
 卸载时，通过 Package Manager 点击 **Remove**，或者从 `manifest.json` 中删除该依赖。卸载前应先移除场景和 Prefab 上依赖本框架的组件。
 
@@ -29,9 +29,11 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 - `UIService` 只负责创建、显示、隐藏、缓存和释放视图。
 - View 通过明确的方法接收数据，通过普通 C# 事件发出用户操作意图。
 - 项目级 Controller 根据业务状态决定显示哪个 View。
+- `InputRouter<TCommand>` 只负责命令门控与转发，不读取具体设备或处理通信协议。
+- 输入源把键盘、UDP、RFID、Kinect 等原始信号转换为项目自己的强类型命令。
 - 不提供全局 EventBus、Service Locator、单例或反射自动注册。
 
-## 输入命令路由（开发中）
+## 输入命令路由
 
 不同项目可能使用键盘、UDP、RFID、Kinect 或串口，但业务层真正关心的通常是“返回”“向左”“确认”等命令。`InputRouter<TCommand>` 用一个显式创建的实例统一转发这些强类型命令，并提供输入开关和全局冷却。
 
@@ -120,6 +122,8 @@ inputRouter.Dispose();
 ```
 
 `InputRouter<TCommand>` 是项目局部对象，不是全局事件总线。应由项目的组合入口或输入控制器持有，并在该对象销毁时调用 `Dispose()`。
+
+更完整的原理、生命周期、UDP 接入和练习示例请阅读 [《InputRouter 详解》](Documentation~/InputRouter详解.md)。
 
 ## 场景配置
 
@@ -289,4 +293,4 @@ uiService.Dispose();
 ]
 ```
 
-然后通过 Unity Test Runner 运行 EditMode 测试。
+然后通过 Unity Test Runner 的 **PlayMode** 页面运行测试。`0.2.0` 包含 5 项 UI 测试和 6 项 Input 测试，共 11 项。
