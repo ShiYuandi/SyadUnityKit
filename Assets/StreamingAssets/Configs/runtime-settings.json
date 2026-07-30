@@ -1,0 +1,18 @@
+{
+    "window": {
+        "enabled": true,
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080,
+        "fullscreen": false,
+        "borderless": false,
+        "alwaysOnTop": false,
+        "bringToFrontOnce": false
+    },
+    "cursor": {
+        "hidden": false,
+        "confineToWindow": false
+    },
+    "qualityLevel": -1
+}

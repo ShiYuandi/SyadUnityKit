@@ -2,7 +2,7 @@
 
 本文介绍 `Syad.UnityKit.Input.InputRouter<TCommand>` 的设计目的、基本用法、生命周期、冷却机制以及与键盘、UDP、RFID、Kinect 等输入源的协作方式。
 
-适用版本：SYAD Unity Kit `0.2.0`。
+适用版本：SYAD Unity Kit `0.2.0` 及以上。
 
 ## 目录
 

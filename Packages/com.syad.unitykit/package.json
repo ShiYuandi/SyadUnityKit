@@ -1,12 +1,12 @@
 {
   "name": "com.syad.unitykit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "displayName": "SYAD Unity Kit",
-  "description": "一套小型、显式的 Unity 运行时基础框架，提供 UI 生命周期管理与强类型输入命令路由。",
+  "description": "一套小型、显式的 Unity 运行时基础框架，提供 UI、输入命令路由、运行配置与 Windows Player 窗口控制。",
   "unity": "2019.4",
-  "documentationUrl": "https://github.com/ShiYuandi/SyadUnityKit/tree/v0.2.0/Packages/com.syad.unitykit/Documentation~",
-  "changelogUrl": "https://github.com/ShiYuandi/SyadUnityKit/blob/v0.2.0/Packages/com.syad.unitykit/CHANGELOG.md",
-  "licensesUrl": "https://github.com/ShiYuandi/SyadUnityKit/blob/v0.2.0/Packages/com.syad.unitykit/LICENSE.md",
+  "documentationUrl": "https://github.com/ShiYuandi/SyadUnityKit/tree/v0.3.0/Packages/com.syad.unitykit/Documentation~",
+  "changelogUrl": "https://github.com/ShiYuandi/SyadUnityKit/blob/v0.3.0/Packages/com.syad.unitykit/CHANGELOG.md",
+  "licensesUrl": "https://github.com/ShiYuandi/SyadUnityKit/blob/v0.3.0/Packages/com.syad.unitykit/LICENSE.md",
   "author": {
     "name": "SYAD"
   },
@@ -14,6 +14,8 @@
     "syad",
     "ui",
     "input",
+    "config",
+    "windows",
     "framework"
   ],
   "license": "MIT"

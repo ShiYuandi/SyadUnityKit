@@ -1,6 +1,6 @@
 # SYAD Unity Kit
 
-SYAD Unity Kit 是一套小型、显式、便于理解和扩展的 Unity 运行时基础框架。`0.2.0` 提供 UI 生命周期管理与强类型输入命令路由。
+SYAD Unity Kit 是一套小型、显式、便于理解和扩展的 Unity 运行时基础框架。`0.3.0` 提供 UI 生命周期管理、强类型输入命令路由、运行时配置读取，以及 Windows Player 现场运行设置。
 
 支持 Unity **2019.4 LTS 及以上版本**，并保持与 Unity 2022.3 LTS 兼容。
 
@@ -10,6 +10,9 @@ SYAD Unity Kit 是一套小型、显式、便于理解和扩展的 Unity 运行�
 |---|---|---|
 | UI | `Syad.UnityKit.UI` | 页面目录、层级、生命周期、缓存、重复实例和释放策略 |
 | Input | `Syad.UnityKit.Input` | 强类型命令转发、输入启停、全局冷却和冷却重置 |
+| RuntimeConfig | `Syad.UnityKit.RuntimeConfig` | 从显式根目录读取 UTF-8 文本和强类型 JSON 配置 |
+| RuntimeSettings | `Syad.UnityKit.RuntimeSettings` | 零编码加载并应用分辨率、光标和画质设置 |
+| Windows | `Syad.UnityKit.Windows` | Windows Player 窗口位置、无边框和置顶控制 |
 
 框架不提供全局 EventBus、Service Locator、单例或反射自动注册。具体设备读取、通信协议、业务状态和页面导航仍由项目代码负责。
 
@@ -17,6 +20,8 @@ SYAD Unity Kit 是一套小型、显式、便于理解和扩展的 Unity 运行�
 
 - [包使用文档](Packages/com.syad.unitykit/README.md)
 - [InputRouter 详解](Packages/com.syad.unitykit/Documentation~/InputRouter详解.md)
+- [RuntimeConfig 详解](Packages/com.syad.unitykit/Documentation~/RuntimeConfig详解.md)
+- [RuntimeSettings 与 Windows 窗口控制](Packages/com.syad.unitykit/Documentation~/RuntimeSettings详解.md)
 - [版本变更记录](Packages/com.syad.unitykit/CHANGELOG.md)
 
 ## 通过 Git 安装
@@ -35,7 +40,7 @@ SYAD Unity Kit 是一套小型、显式、便于理解和扩展的 Unity 运行�
 4. 粘贴下面的地址：
 
 ```text
-https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.2.0
+https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.3.0
 ```
 
 5. 点击 **Add**，等待 Unity 下载并编译完成。
@@ -49,7 +54,7 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 ```json
 {
   "dependencies": {
-    "com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.2.0"
+    "com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.3.0"
   }
 }
 ```
@@ -72,10 +77,10 @@ using Syad.UnityKit.UI;
 框架使用 Git 标签发布稳定版本。更新时，把安装地址末尾的标签改为目标版本：
 
 ```text
-#v0.2.0
+#v0.3.0
 ```
 
-例如未来更新到 `0.3.0`：
+例如安装 `0.3.0`：
 
 ```text
 https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.3.0
@@ -90,7 +95,7 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 如果通过 `manifest.json` 安装，则删除下面这一项并保存：
 
 ```json
-"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.2.0"
+"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.3.0"
 ```
 
 卸载前请先移除场景和 Prefab 上依赖本框架的组件，否则 Unity 会显示 Missing Script。
@@ -132,6 +137,36 @@ inputRouter.TryDispatch(ExhibitCommand.Left);
 
 输入源负责把键盘、UDP、RFID、Kinect 等原始信号转换为命令；InputRouter 负责启停、冷却和转发；项目 Controller 负责实际业务。详细说明请阅读 [《InputRouter 详解》](Packages/com.syad.unitykit/Documentation~/InputRouter详解.md)。
 
+### RuntimeConfig 与现场运行设置
+
+一般项目不需要为运行设置编写代码。安装包后执行：
+
+```text
+Tools > SYAD Unity Kit > Runtime Settings > 一键创建运行设置
+```
+
+工具会在当前场景添加 `RuntimeSettingsBootstrap`，并创建默认 JSON。保存场景后直接构建即可。
+
+下面是需要读取其他业务配置时使用的底层 API：
+
+先定义带有 `[Serializable]` 的配置类，再从指定根目录读取 JSON：
+
+```csharp
+using Syad.UnityKit.RuntimeConfig;
+
+RuntimeConfigLoader loader =
+    RuntimeConfigLoader.CreateForStreamingAssets();
+
+ExhibitConfig config =
+    loader.LoadJson<ExhibitConfig>("Configs/runtime-config.json");
+```
+
+RuntimeConfig 只负责读取并转换配置，不负责修改窗口、启动网络或初始化设备。`RuntimeSettingsBootstrap` 会自动组合 `RuntimeSettingsApplier` 和 `WindowsWindowController`。
+
+第一版适用于 Unity Editor 和可通过 `System.IO` 直接访问 StreamingAssets 的桌面平台，暂不支持 Android、WebGL。详细说明请阅读 [《RuntimeConfig 详解》](Packages/com.syad.unitykit/Documentation~/RuntimeConfig详解.md)和[《RuntimeSettings 与 Windows 窗口控制》](Packages/com.syad.unitykit/Documentation~/RuntimeSettings详解.md)。
+
+现场部署时，修改 Player 目录中的 `程序名_Data/StreamingAssets/Configs/runtime-settings.json`，再按 Inspector 中设置的重新加载按键即可应用，不需要重新构建。Editor 只读取和校验，窗口行为必须在构建后的 Windows Player 中验证。
+
 ## 仓库结构
 
 ```text
@@ -139,7 +174,8 @@ SyadUnityKit
 ├─ Assets
 │  └─ Demo
 │     ├─ UI                       UI 页面管理示例
-│     └─ Input                    输入源与命令路由示例
+│     ├─ Input                    输入源与命令路由示例
+│     └─ RuntimeConfig            零编码运行设置示例
 ├─ Packages
 │  └─ com.syad.unitykit
 │     ├─ Runtime                  可复用的 UPM 框架源码
@@ -159,7 +195,7 @@ SyadUnityKit
 2. 在 `Assets` 中编写示例验证真实使用流程。
 3. 使用 Unity Test Framework 运行包测试。
 4. 更新 `package.json` 版本号与 `CHANGELOG.md`。
-5. 提交 Git，并创建与包版本一致的标签，例如 `v0.2.0`。
+5. 提交 Git，并创建与包版本一致的版本标签。
 
 ## 许可证
 

@@ -1,0 +1,18 @@
+{
+  "name": "Syad.UnityKit.Editor",
+  "rootNamespace": "Syad.UnityKit.Editor",
+  "references": [
+    "Syad.UnityKit.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,6 +1,6 @@
 # SYAD Unity Kit
 
-SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运行时基础框架。`0.2.0` 提供 UI 生命周期与页面管理，以及强类型输入命令路由。游戏状态、业务数据、“当前应该显示什么”和“收到输入后应该做什么”仍由具体项目负责。
+SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运行时基础框架。`0.3.0` 提供 UI 生命周期与页面管理、强类型输入命令路由、运行时配置读取，以及 Windows Player 现场运行设置。
 
 支持 Unity **2019.4 LTS 及以上版本**，包括 Unity 2022.3 LTS。
 
@@ -9,16 +9,16 @@ SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运�
 在 Unity 中打开 **Window > Package Manager**，点击左上角的 **+**，选择 **Add package from git URL**，输入：
 
 ```text
-https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.2.0
+https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.3.0
 ```
 
 也可以在目标项目的 `Packages/manifest.json` 的 `dependencies` 中加入：
 
 ```json
-"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.2.0"
+"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.3.0"
 ```
 
-地址末尾的 `#v0.2.0` 表示锁定到稳定的 `0.2.0` 版本。更新框架时，应把它改成需要安装的新版本标签。
+地址末尾的 `#v0.3.0` 表示锁定到稳定的 `0.3.0` 版本。更新框架时，应把它改成需要安装的新版本标签。
 
 卸载时，通过 Package Manager 点击 **Remove**，或者从 `manifest.json` 中删除该依赖。卸载前应先移除场景和 Prefab 上依赖本框架的组件。
 
@@ -31,6 +31,10 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 - 项目级 Controller 根据业务状态决定显示哪个 View。
 - `InputRouter<TCommand>` 只负责命令门控与转发，不读取具体设备或处理通信协议。
 - 输入源把键盘、UDP、RFID、Kinect 等原始信号转换为项目自己的强类型命令。
+- `RuntimeConfigLoader` 只负责读取并转换配置，不自动应用窗口、网络或设备参数。
+- 配置读取被限制在显式根目录内，不接受绝对文件路径或 `../` 目录越界。
+- `RuntimeSettingsApplier` 显式应用 Unity 分辨率、光标和画质设置。
+- `WindowsWindowController` 只在构建后的 Windows Player 中控制窗口位置、无边框和置顶。
 - 不提供全局 EventBus、Service Locator、单例或反射自动注册。
 
 ## 输入命令路由
@@ -124,6 +128,110 @@ inputRouter.Dispose();
 `InputRouter<TCommand>` 是项目局部对象，不是全局事件总线。应由项目的组合入口或输入控制器持有，并在该对象销毁时调用 `Dispose()`。
 
 更完整的原理、生命周期、UDP 接入和练习示例请阅读 [《InputRouter 详解》](Documentation~/InputRouter详解.md)。
+
+## 运行时配置
+
+RuntimeConfig 用于从明确指定的本地目录读取 UTF-8 文本或 `JsonUtility` 强类型 JSON。该模块自 `0.3.0` 起提供。
+
+先定义与 JSON 字段对应的配置类：
+
+```csharp
+using System;
+
+[Serializable]
+public sealed class ExhibitConfig
+{
+    public string applicationName;
+    public int windowWidth;
+    public int windowHeight;
+    public bool fullscreen;
+    public int udpPort;
+}
+```
+
+从 `StreamingAssets` 读取配置：
+
+```csharp
+using Syad.UnityKit.RuntimeConfig;
+
+RuntimeConfigLoader loader =
+    RuntimeConfigLoader.CreateForStreamingAssets();
+
+ExhibitConfig config;
+string error;
+
+if (!loader.TryLoadJson(
+        "Configs/runtime-config.json",
+        out config,
+        out error))
+{
+    UnityEngine.Debug.LogError("配置加载失败：" + error);
+    return;
+}
+
+UnityEngine.Debug.Log("读取到 UDP 端口：" + config.udpPort);
+```
+
+也可以通过 `new RuntimeConfigLoader(rootDirectory)` 指定其他本地根目录。`LoadText` 和 `LoadJson` 在失败时抛出异常；`TryLoadText` 和 `TryLoadJson` 返回 `false` 与错误信息。加载器不持有文件句柄，不需要 `Dispose()`。
+
+第一版只支持可由 `System.IO` 直接访问的本地路径，适用于 Unity Editor 和桌面平台；Android、WebGL 等 URL 或压缩包形式的 `StreamingAssets` 暂不支持。
+
+完整的 API、路径安全规则、平台限制和练习请阅读 [《RuntimeConfig 详解》](Documentation~/RuntimeConfig详解.md)。
+
+## 应用运行设置
+
+简单项目不需要编写代码。安装包后，在 Unity 菜单中选择：
+
+```text
+Tools > SYAD Unity Kit > Runtime Settings > 一键创建运行设置
+```
+
+菜单会自动完成：
+
+- 在当前场景创建 `Runtime Settings Bootstrap` 对象；
+- 添加 `RuntimeSettingsBootstrap` 组件；
+- 创建 `Assets/StreamingAssets/Configs/runtime-settings.json`；
+- 已有配置文件时保留原文件，不会覆盖。
+
+组件默认在启动时加载配置。Editor 中只读取和校验，构建后的 Player 才应用窗口、光标和画质设置。需要运行时重新加载时，可以在中文 Inspector 中启用重新加载按键。
+
+现场部署时，修改 Player 目录中的：
+
+```text
+程序名_Data/StreamingAssets/Configs/runtime-settings.json
+```
+
+保存后回到程序按重新加载键即可应用，不需要重新构建。启动和按键触发日志会显示当前按键及配置路径，方便维护人员确认。
+
+一般项目到这里就已经完成。只有需要接入自定义启动流程时，才需要自己组合下面的底层 API：
+
+```csharp
+using Syad.UnityKit.RuntimeConfig;
+using Syad.UnityKit.RuntimeSettings;
+
+RuntimeConfigLoader loader =
+    RuntimeConfigLoader.CreateForStreamingAssets();
+
+ApplicationRuntimeSettings settings;
+string error;
+
+if (loader.TryLoadJson(
+        "Configs/runtime-settings.json",
+        out settings,
+        out error)
+    && RuntimeSettingsApplier.TryApply(settings, out error))
+{
+    UnityEngine.Debug.Log("运行设置已应用。");
+}
+else
+{
+    UnityEngine.Debug.LogError(error);
+}
+```
+
+`RuntimeSettingsApplier` 负责分辨率、光标和画质。窗口位置、无边框与置顶应在 `Screen.SetResolution` 后等待两帧，再交给一个显式创建的 `WindowsWindowController` 实例。
+
+Windows 控制不写注册表、不依赖本地插件，也不会循环抢占焦点。完整配置格式、组件选项和底层调用顺序请阅读 [《RuntimeSettings 与 Windows 窗口控制》](Documentation~/RuntimeSettings详解.md)。
 
 ## 场景配置
 
@@ -293,4 +401,4 @@ uiService.Dispose();
 ]
 ```
 
-然后通过 Unity Test Runner 的 **PlayMode** 页面运行测试。`0.2.0` 包含 5 项 UI 测试和 6 项 Input 测试，共 11 项。
+然后通过 Unity Test Runner 的 **PlayMode** 页面运行测试。`0.3.0` 包含 5 项 UI、6 项 Input、7 项 RuntimeConfig 和 6 项 RuntimeSettings 测试，共 24 项。
