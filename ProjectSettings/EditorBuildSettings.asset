@@ -8,4 +8,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Demo/RuntimeConfig/Scenes/RuntimeConfigDemo.unity
     guid: 36e4211615434ea4855798b06b69c4ab
+  - enabled: 0
+    path: Assets/Demo/UDP/Scenes/UdpReceiverDemo.unity
+    guid: 81d295dd3f744f46ae67bde3be333b42
   m_configObjects: {}

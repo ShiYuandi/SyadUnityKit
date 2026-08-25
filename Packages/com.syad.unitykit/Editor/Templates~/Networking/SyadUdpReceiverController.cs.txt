@@ -1,0 +1,70 @@
+using Syad.UnityKit.Networking;
+using UnityEngine;
+
+namespace SyadUnityKit.Generated
+{
+    /// <summary>
+    /// UDP 项目侧处理模板。
+    /// 接收器只负责收包和主线程切换，文本解析和业务逻辑写在这里。
+    /// </summary>
+    [RequireComponent(typeof(UdpReceiverBehaviour))]
+    public sealed class SyadUdpReceiverController : MonoBehaviour
+    {
+        [SerializeField]
+        private UdpReceiverBehaviour _receiver;
+
+        private void Awake()
+        {
+            if (_receiver == null)
+            {
+                _receiver = GetComponent<UdpReceiverBehaviour>();
+            }
+        }
+
+        private void OnEnable()
+        {
+            if (_receiver == null)
+            {
+                return;
+            }
+
+            _receiver.OnMessageReceived.AddListener(HandleMessage);
+            _receiver.OnError.AddListener(HandleError);
+        }
+
+        private void OnDisable()
+        {
+            if (_receiver == null)
+            {
+                return;
+            }
+
+            _receiver.OnMessageReceived.RemoveListener(HandleMessage);
+            _receiver.OnError.RemoveListener(HandleError);
+        }
+
+        /// <summary>
+        /// 普通 UDP 业务数据在这里处理，例如温度、距离、压力或 JSON。
+        /// 离散输入命令请交给 UdpInputSource，不要在这里触发 InputRouter。
+        /// </summary>
+        public void HandleMessage(string message)
+        {
+            Debug.Log(
+                "SYAD UDP Controller：收到来自 "
+                + _receiver.LastRemoteEndPoint
+                + " 的文本："
+                + message,
+                this);
+
+            // 在这里解析并更新项目业务数据。
+        }
+
+        /// <summary>UDP 监听或 UTF-8 解码发生错误时进入这里。</summary>
+        public void HandleError(string error)
+        {
+            Debug.LogError(
+                "SYAD UDP Controller：" + error,
+                this);
+        }
+    }
+}

@@ -1,0 +1,12 @@
+namespace SyadUnityKit.Generated
+{
+    /// <summary>
+    /// 项目可以交给 InputRouter 的命令。请按项目需要增加、删除或重命名。
+    /// </summary>
+    public enum SyadInputCommand
+    {
+        Left,
+        Right,
+        Confirm
+    }
+}

@@ -1,0 +1,122 @@
+using System.Collections.Generic;
+using Syad.UnityKit.Input;
+using UnityEngine;
+
+namespace SyadUnityKit.Generated
+{
+    /// <summary>
+    /// 输入组合入口：统一订阅输入源、交给 InputRouter，再处理通过的命令。
+    /// 新增设备时只需增加 SyadInputSource，不需要修改本控制器字段。
+    /// </summary>
+    public sealed class SyadInputController : MonoBehaviour
+    {
+        [SerializeField]
+        private SyadInputSource[] _inputSources;
+
+        [SerializeField, Min(0f)]
+        private float _cooldownSeconds = 0.5f;
+
+        private readonly List<SyadInputSource> _subscribedSources =
+            new List<SyadInputSource>();
+        private InputRouter<SyadInputCommand> _inputRouter;
+
+        private void Awake()
+        {
+            _inputRouter =
+                new InputRouter<SyadInputCommand>(_cooldownSeconds);
+            _inputRouter.CommandReceived += HandleCommand;
+
+            SubscribeInputSources();
+        }
+
+        private void SubscribeInputSources()
+        {
+            if (_inputSources == null || _inputSources.Length == 0)
+            {
+                Debug.LogWarning(
+                    "SYAD Input：没有配置输入源。请把 KeyboardInputSource、"
+                    + "UdpInputSource 等组件加入输入源数组。",
+                    this);
+                return;
+            }
+
+            HashSet<SyadInputSource> uniqueSources =
+                new HashSet<SyadInputSource>();
+
+            for (int i = 0; i < _inputSources.Length; i++)
+            {
+                SyadInputSource source = _inputSources[i];
+                if (source == null || !uniqueSources.Add(source))
+                {
+                    continue;
+                }
+
+                source.CommandDetected += SubmitCommand;
+                _subscribedSources.Add(source);
+            }
+        }
+
+        /// <summary>所有输入源最终都从这里向 InputRouter 提交命令。</summary>
+        public void SubmitCommand(SyadInputCommand command)
+        {
+            if (_inputRouter == null)
+            {
+                Debug.LogWarning(
+                    "SYAD Input：路由器尚未初始化，无法提交命令。",
+                    this);
+                return;
+            }
+
+            if (!_inputRouter.TryDispatch(command))
+            {
+                Debug.Log(
+                    "SYAD Input：命令被冷却或禁用状态拦截："
+                    + command,
+                    this);
+            }
+        }
+
+        /// <summary>
+        /// 只有通过 InputRouter 的命令才会进入这里。
+        /// 请把项目业务写在这个方法中。
+        /// </summary>
+        private void HandleCommand(SyadInputCommand command)
+        {
+            switch (command)
+            {
+                case SyadInputCommand.Left:
+                    Debug.Log("SYAD Input：执行 Left 业务。", this);
+                    break;
+
+                case SyadInputCommand.Right:
+                    Debug.Log("SYAD Input：执行 Right 业务。", this);
+                    break;
+
+                case SyadInputCommand.Confirm:
+                    Debug.Log("SYAD Input：执行 Confirm 业务。", this);
+                    break;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            for (int i = 0; i < _subscribedSources.Count; i++)
+            {
+                SyadInputSource source = _subscribedSources[i];
+                if (source != null)
+                {
+                    source.CommandDetected -= SubmitCommand;
+                }
+            }
+
+            _subscribedSources.Clear();
+
+            if (_inputRouter != null)
+            {
+                _inputRouter.CommandReceived -= HandleCommand;
+                _inputRouter.Dispose();
+                _inputRouter = null;
+            }
+        }
+    }
+}
