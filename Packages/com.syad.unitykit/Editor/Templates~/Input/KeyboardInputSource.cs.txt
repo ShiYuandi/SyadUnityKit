@@ -1,0 +1,29 @@
+using UnityEngine;
+
+namespace SyadUnityKit.Generated
+{
+    /// <summary>
+    /// 键盘输入源，只负责把原始按键转换成项目命令。
+    /// 它不处理冷却、输入开关和具体业务。
+    /// </summary>
+    public sealed class KeyboardInputSource : SyadInputSource
+    {
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            {
+                RaiseCommand(SyadInputCommand.Left);
+            }
+
+            if (Input.GetKeyDown(KeyCode.RightArrow))
+            {
+                RaiseCommand(SyadInputCommand.Right);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                RaiseCommand(SyadInputCommand.Confirm);
+            }
+        }
+    }
+}

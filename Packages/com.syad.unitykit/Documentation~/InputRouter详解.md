@@ -136,6 +136,37 @@ RFID 卡片      ┘
 
 不同设备只负责产生统一命令。后面的业务逻辑不需要知道命令来自键盘还是外部硬件。
 
+### InputSource 与 SyadInputSource 的关系
+
+框架 Runtime 还提供：
+
+```csharp
+public abstract class InputSource<TCommand> : MonoBehaviour
+```
+
+它统一声明 `CommandDetected` 事件，并向具体输入源提供受保护的 `RaiseCommand()`。它不读取设备、不处理冷却，也不执行业务。
+
+一键创建工具会在项目 `Assets` 中生成一个很薄的桥接类：
+
+```csharp
+public abstract class SyadInputSource
+    : InputSource<SyadInputCommand>
+{
+}
+```
+
+这样框架无需知道项目有哪些命令，项目又可以在 Inspector 中继续使用 `SyadInputSource[]`。新增 RFID、触摸或其他设备时，应继承项目侧 `SyadInputSource`，在识别出命令后调用 `RaiseCommand()`。
+
+完整职责关系是：
+
+```text
+具体设备输入源
+→ InputSource<TCommand>.CommandDetected
+→ 项目输入控制器
+→ InputRouter<TCommand>.TryDispatch
+→ 项目业务
+```
+
 ## 四、TCommand 是什么
 
 类定义为：

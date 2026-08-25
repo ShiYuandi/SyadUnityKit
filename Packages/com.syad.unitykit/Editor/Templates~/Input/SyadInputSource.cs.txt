@@ -1,0 +1,12 @@
+using Syad.UnityKit.Input;
+
+namespace SyadUnityKit.Generated
+{
+    /// <summary>
+    /// 项目输入源桥接类。它为框架输入源指定本项目使用的命令类型。
+    /// </summary>
+    public abstract class SyadInputSource
+        : InputSource<SyadInputCommand>
+    {
+    }
+}

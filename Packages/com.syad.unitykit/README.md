@@ -1,6 +1,6 @@
 # SYAD Unity Kit
 
-SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运行时基础框架。`0.3.0` 提供 UI 生命周期与页面管理、强类型输入命令路由、运行时配置读取，以及 Windows Player 现场运行设置。
+SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运行时基础框架。`0.4.0` 提供 UI 生命周期与页面管理、强类型输入源与命令路由、零编码 UDP 文本接收、运行时配置读取，以及 Windows Player 现场运行设置。
 
 支持 Unity **2019.4 LTS 及以上版本**，包括 Unity 2022.3 LTS。
 
@@ -9,16 +9,16 @@ SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运�
 在 Unity 中打开 **Window > Package Manager**，点击左上角的 **+**，选择 **Add package from git URL**，输入：
 
 ```text
-https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.3.0
+https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.4.0
 ```
 
 也可以在目标项目的 `Packages/manifest.json` 的 `dependencies` 中加入：
 
 ```json
-"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.3.0"
+"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.4.0"
 ```
 
-地址末尾的 `#v0.3.0` 表示锁定到稳定的 `0.3.0` 版本。更新框架时，应把它改成需要安装的新版本标签。
+地址末尾的 `#v0.4.0` 表示锁定到稳定的 `0.4.0` 版本。更新框架时，应把它改成需要安装的新版本标签。
 
 卸载时，通过 Package Manager 点击 **Remove**，或者从 `manifest.json` 中删除该依赖。卸载前应先移除场景和 Prefab 上依赖本框架的组件。
 
@@ -29,8 +29,11 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 - `UIService` 只负责创建、显示、隐藏、缓存和释放视图。
 - View 通过明确的方法接收数据，通过普通 C# 事件发出用户操作意图。
 - 项目级 Controller 根据业务状态决定显示哪个 View。
+- `InputSource<TCommand>` 提供输入源事件和命令提交能力，不了解具体设备和项目业务。
 - `InputRouter<TCommand>` 只负责命令门控与转发，不读取具体设备或处理通信协议。
 - 输入源把键盘、UDP、RFID、Kinect 等原始信号转换为项目自己的强类型命令。
+- `UdpReceiverBehaviour` 只负责接收 UTF-8 UDP 文本和切换到 Unity 主线程，不解析业务协议。
+- UDP 接收器不会自动修改 UI 或调用 InputRouter，项目 Controller 决定消息如何使用。
 - `RuntimeConfigLoader` 只负责读取并转换配置，不自动应用窗口、网络或设备参数。
 - 配置读取被限制在显式根目录内，不接受绝对文件路径或 `../` 目录越界。
 - `RuntimeSettingsApplier` 显式应用 Unity 分辨率、光标和画质设置。
@@ -40,6 +43,16 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 ## 输入命令路由
 
 不同项目可能使用键盘、UDP、RFID、Kinect 或串口，但业务层真正关心的通常是“返回”“向左”“确认”等命令。`InputRouter<TCommand>` 用一个显式创建的实例统一转发这些强类型命令，并提供输入开关和全局冷却。
+
+第一次使用时，可以先保存场景，再执行：
+
+```text
+Tools > SYAD Unity Kit > Input > 创建输入系统模板
+```
+
+工具会在 `Assets/SyadUnityKit/Generated/Input` 生成命令枚举、`SyadInputSource` 桥接类、`KeyboardInputSource`、`UdpInputSource` 和 `SyadInputController`。框架的 `InputSource<TCommand>` 提供通用输入源能力，项目侧 `SyadInputSource` 只负责指定 `SyadInputCommand` 类型。控制器通过输入源数组统一订阅，不再为每种设备增加一个字段。Unity 编译完成后会自动创建场景对象，已存在的项目脚本不会被覆盖。
+
+Input 模板菜单属于 `0.4.0`，可在安装 `v0.4.0` 后直接使用。
 
 它不会读取具体设备、解析通信协议或切换页面，这些工作仍由项目代码负责。所有命令共享同一段冷却时间，适合防止页面切换动画期间连续触发。
 
@@ -128,6 +141,48 @@ inputRouter.Dispose();
 `InputRouter<TCommand>` 是项目局部对象，不是全局事件总线。应由项目的组合入口或输入控制器持有，并在该对象销毁时调用 `Dispose()`。
 
 更完整的原理、生命周期、UDP 接入和练习示例请阅读 [《InputRouter 详解》](Documentation~/InputRouter详解.md)。
+
+## UDP 文本接收
+
+`0.4.0` 提供零编码 `UdpReceiverBehaviour`，可在 Inspector 中配置端口，也可以通过 Input 模板和 UDP 模板快速创建项目侧组件。
+
+推荐先保存场景，再执行：
+
+```text
+Tools > SYAD Unity Kit > Networking > 创建 UDP 接收器
+```
+
+工具会生成可修改的 `SyadUdpReceiverController.cs`，并在脚本编译后自动创建带有接收器和处理控制器的场景对象。默认监听端口为 `15000`。如果场景中已经存在 Input 系统，还会自动添加 `UdpInputSource` 并更新输入源数组。控制器会在运行时订阅接收器事件，Inspector 事件列表为空属于正常现象。
+
+普通项目的使用步骤：
+
+1. 在场景中新建 GameObject；
+2. 添加 **SYAD Unity Kit > Networking > UDP Receiver**；
+3. 填写监听端口，例如 `15000`；
+4. 修改 `SyadUdpReceiverController.HandleMessage`，或在不使用模板控制器时自行绑定“收到文本消息”UnityEvent；
+5. 进入 Play Mode 或构建 Player。
+
+事件目标方法：
+
+```csharp
+public void HandleUdpMessage(string message)
+{
+    UnityEngine.Debug.Log("收到 UDP：" + message);
+}
+```
+
+组件在后台线程接收，但始终在 Unity 主线程触发事件。一个 UDP 数据包对应一条严格 UTF-8 文本，不拆分换行、不自动 Trim，也不解析 JSON。
+
+默认监听 `0.0.0.0:15000`。PowerShell 本机测试：
+
+```powershell
+$udp = New-Object System.Net.Sockets.UdpClient
+$data = [Text.Encoding]::UTF8.GetBytes("中国")
+$null = $udp.Send($data, $data.Length, "127.0.0.1", 15000)
+$udp.Dispose()
+```
+
+外部设备需要把目标地址设置为 Unity Player 所在电脑的局域网 IP，并确认 Windows 防火墙允许 UDP。完整说明请阅读 [《UDP Receiver 详解》](Documentation~/UdpReceiver详解.md)。Input 与 UDP 模板菜单、生成文件和职责拆分请阅读 [《Input 与 UDP 模板创建工具详解》](Documentation~/模板创建工具详解.md)。
 
 ## 运行时配置
 
@@ -401,4 +456,4 @@ uiService.Dispose();
 ]
 ```
 
-然后通过 Unity Test Runner 的 **PlayMode** 页面运行测试。`0.3.0` 包含 5 项 UI、6 项 Input、7 项 RuntimeConfig 和 6 项 RuntimeSettings 测试，共 24 项。
+然后通过 Unity Test Runner 的 **PlayMode** 页面运行测试。`0.4.0` 包含 5 项 UI、6 项 InputRouter、3 项 InputSource、7 项 RuntimeConfig、6 项 RuntimeSettings 和 12 项 UDP 测试，共 39 项。

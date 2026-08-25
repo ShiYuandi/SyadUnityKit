@@ -1,8 +1,27 @@
 # 变更日志
 
-## 未发布
+## 0.4.0 - 2026-08-25
 
-暂无。
+- 新增 `Syad.UnityKit.Networking.UdpReceiverBehaviour` 零编码 UDP 文本接收组件。
+- 支持后台线程接收 UDP 数据包，并在 Unity 主线程触发 `UnityEvent<string>`。
+- 默认监听本机全部 IPv4 网卡，使用严格 UTF-8，并保留一个数据包一条消息的边界。
+- 增加容量受限队列、每帧处理上限、队列溢出统计和中文诊断日志。
+- 提供中文 Inspector、UDP Demo、详细文档和 12 项 PlayMode 测试。
+- 第一版只提供 UDP 文本接收，不提供发送、串口、TCP、协议解析或可靠投递。
+- 新增 Input 与 UDP Editor 脚手架菜单，可在项目 `Assets` 中生成中文可修改模板并自动创建场景对象。
+- Input 模板将 `KeyboardInputSource`、命令枚举和 `SyadInputController` 分离，保持输入源与 `InputRouter` 解耦。
+- 新增 `SyadInputSource` 基类和 `UdpInputSource` 适配器，`SyadInputController` 改用输入源数组，不再写死具体设备字段。
+- 新增 Runtime `InputSource<TCommand>` 泛型基类，统一输入源事件、强类型命令提交与销毁清理。
+- 项目侧 `SyadInputSource` 调整为 `InputSource<SyadInputCommand>` 的非泛型桥接类，保持 Unity Inspector 和现有场景引用方式不变。
+- Input 与 UDP 创建菜单支持任意执行顺序，并自动连接场景中已有的键盘和 UDP 输入源。
+- 模板工具不会覆盖已有项目脚本，也不会把项目业务代码写入 UPM Runtime。
+- 新增 Runtime `InputSource<TCommand>` 测试，包内运行时测试总数达到 39 项。
+
+### 0.4.0 发布边界
+
+- UDP 模块只提供文本接收，不提供发送、串口、TCP、JSON 协议解析或可靠投递。
+- `SyadUdpReceiverController` 使用运行时事件订阅；创建模板后无需手动向 Inspector 的 UnityEvent 添加同一个处理方法。
+- UDP 和 Input 模板生成的脚本属于项目 `Assets`，使用者可以继续修改，不会被 UPM Runtime 自动覆盖。
 
 ## 0.3.0 - 2026-07-30
 

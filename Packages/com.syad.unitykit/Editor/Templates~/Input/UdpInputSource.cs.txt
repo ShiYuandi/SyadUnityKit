@@ -1,0 +1,83 @@
+using System;
+using Syad.UnityKit.Networking;
+using UnityEngine;
+
+namespace SyadUnityKit.Generated
+{
+    /// <summary>
+    /// 把 UDP 文本转换成项目命令的输入适配器。
+    /// 温度、距离等连续数据应由普通 UDP 业务控制器处理，不要写在这里。
+    /// </summary>
+    [RequireComponent(typeof(UdpReceiverBehaviour))]
+    public sealed class UdpInputSource : SyadInputSource
+    {
+        [SerializeField]
+        private UdpReceiverBehaviour _receiver;
+
+        [SerializeField]
+        private bool _logUnknownMessages = true;
+
+        private void Awake()
+        {
+            if (_receiver == null)
+            {
+                _receiver = GetComponent<UdpReceiverBehaviour>();
+            }
+        }
+
+        private void OnEnable()
+        {
+            if (_receiver != null)
+            {
+                _receiver.OnMessageReceived.AddListener(HandleMessage);
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (_receiver != null)
+            {
+                _receiver.OnMessageReceived.RemoveListener(HandleMessage);
+            }
+        }
+
+        private void HandleMessage(string message)
+        {
+            string normalized = message == null
+                ? string.Empty
+                : message.Trim();
+
+            if (normalized.Equals(
+                "Left",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                RaiseCommand(SyadInputCommand.Left);
+                return;
+            }
+
+            if (normalized.Equals(
+                "Right",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                RaiseCommand(SyadInputCommand.Right);
+                return;
+            }
+
+            if (normalized.Equals(
+                "Confirm",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                RaiseCommand(SyadInputCommand.Confirm);
+                return;
+            }
+
+            if (_logUnknownMessages)
+            {
+                Debug.Log(
+                    "SYAD UDP Input：该文本没有映射为输入命令："
+                    + message,
+                    this);
+            }
+        }
+    }
+}
