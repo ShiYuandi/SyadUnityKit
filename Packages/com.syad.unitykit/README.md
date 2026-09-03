@@ -1,6 +1,6 @@
 # SYAD Unity Kit
 
-SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运行时基础框架。`0.4.0` 提供 UI 生命周期与页面管理、强类型输入源与命令路由、零编码 UDP 文本接收、运行时配置读取，以及 Windows Player 现场运行设置。
+SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运行时基础框架。`0.5.0` 提供 UI 生命周期与页面管理、强类型输入源与命令路由、通用状态机、零编码 UDP 文本接收、运行时配置读取，以及 Windows Player 现场运行设置。
 
 支持 Unity **2019.4 LTS 及以上版本**，包括 Unity 2022.3 LTS。
 
@@ -9,16 +9,16 @@ SYAD Unity Kit 是一套刻意保持小型、显式和易于理解的 Unity 运�
 在 Unity 中打开 **Window > Package Manager**，点击左上角的 **+**，选择 **Add package from git URL**，输入：
 
 ```text
-https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.4.0
+https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.5.0
 ```
 
 也可以在目标项目的 `Packages/manifest.json` 的 `dependencies` 中加入：
 
 ```json
-"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.4.0"
+"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.5.0"
 ```
 
-地址末尾的 `#v0.4.0` 表示锁定到稳定的 `0.4.0` 版本。更新框架时，应把它改成需要安装的新版本标签。
+地址末尾的 `#v0.5.0` 表示锁定到稳定的 `0.5.0` 版本。更新框架时，应把它改成需要安装的新版本标签。
 
 卸载时，通过 Package Manager 点击 **Remove**，或者从 `manifest.json` 中删除该依赖。卸载前应先移除场景和 Prefab 上依赖本框架的组件。
 
@@ -32,6 +32,7 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 - `InputSource<TCommand>` 提供输入源事件和命令提交能力，不了解具体设备和项目业务。
 - `InputRouter<TCommand>` 只负责命令门控与转发，不读取具体设备或处理通信协议。
 - 输入源把键盘、UDP、RFID、Kinect 等原始信号转换为项目自己的强类型命令。
+- `StateMachine<TState>` 只管理当前状态和 `Enter / Update / Exit` 生命周期，不自动决定转换条件。
 - `UdpReceiverBehaviour` 只负责接收 UTF-8 UDP 文本和切换到 Unity 主线程，不解析业务协议。
 - UDP 接收器不会自动修改 UI 或调用 InputRouter，项目 Controller 决定消息如何使用。
 - `RuntimeConfigLoader` 只负责读取并转换配置，不自动应用窗口、网络或设备参数。
@@ -52,7 +53,7 @@ Tools > SYAD Unity Kit > Input > 创建输入系统模板
 
 工具会在 `Assets/SyadUnityKit/Generated/Input` 生成命令枚举、`SyadInputSource` 桥接类、`KeyboardInputSource`、`UdpInputSource` 和 `SyadInputController`。框架的 `InputSource<TCommand>` 提供通用输入源能力，项目侧 `SyadInputSource` 只负责指定 `SyadInputCommand` 类型。控制器通过输入源数组统一订阅，不再为每种设备增加一个字段。Unity 编译完成后会自动创建场景对象，已存在的项目脚本不会被覆盖。
 
-Input 模板菜单属于 `0.4.0`，可在安装 `v0.4.0` 后直接使用。
+Input 模板菜单自 `0.4.0` 起提供，StateMachine 模板菜单自 `0.5.0` 起提供。
 
 它不会读取具体设备、解析通信协议或切换页面，这些工作仍由项目代码负责。所有命令共享同一段冷却时间，适合防止页面切换动画期间连续触发。
 
@@ -142,9 +143,48 @@ inputRouter.Dispose();
 
 更完整的原理、生命周期、UDP 接入和练习示例请阅读 [《InputRouter 详解》](Documentation~/InputRouter详解.md)。
 
+## 通用状态机
+
+`StateMachine<TState>` 是一个不依赖 `MonoBehaviour` 的小型状态机。它参考 `RPC-Udemy-Course` 的结构，只提供当前状态、初始化、切换、更新和停止。
+
+第一次接入时，可以先保存场景，然后执行：
+
+```text
+Tools > SYAD Unity Kit > StateMachine > 创建状态机模板
+```
+
+工具会在 `Assets/SyadUnityKit/Generated/StateMachine` 生成状态基类、默认空闲状态和组合控制器，并在当前场景创建 `SYAD StateMachine` 对象。生成的脚本属于项目代码，可以直接修改；工具不会生成预设的运行状态，也不会覆盖已经存在的脚本。
+
+```csharp
+using Syad.UnityKit.StateMachine;
+
+StateMachine<PlayerState> stateMachine =
+    new StateMachine<PlayerState>();
+
+stateMachine.Initialize(idleState);
+stateMachine.Update();
+stateMachine.ChangeState(moveState);
+stateMachine.Stop();
+```
+
+项目自己的状态基类实现：
+
+```csharp
+public abstract class PlayerState : IState
+{
+    public abstract void Enter();
+    public abstract void Update();
+    public abstract void Exit();
+}
+```
+
+由项目 `MonoBehaviour.Update()` 显式调用 `stateMachine.Update()`。如果具体状态需要计时，它可以自行使用 `Time.deltaTime`，通用内核不强制传入时间参数。
+
+完整规则请阅读 [《StateMachine 设计方案》](Documentation~/StateMachine设计方案.md)。仓库内可运行示例位于 `Assets/Demo/StateMachine`。
+
 ## UDP 文本接收
 
-`0.4.0` 提供零编码 `UdpReceiverBehaviour`，可在 Inspector 中配置端口，也可以通过 Input 模板和 UDP 模板快速创建项目侧组件。
+`0.5.0` 继续提供零编码 `UdpReceiverBehaviour`，可在 Inspector 中配置端口，也可以通过 Input、UDP 和 StateMachine 模板快速创建项目侧组件。
 
 推荐先保存场景，再执行：
 
@@ -456,4 +496,4 @@ uiService.Dispose();
 ]
 ```
 
-然后通过 Unity Test Runner 的 **PlayMode** 页面运行测试。`0.4.0` 包含 5 项 UI、6 项 InputRouter、3 项 InputSource、7 项 RuntimeConfig、6 项 RuntimeSettings 和 12 项 UDP 测试，共 39 项。
+然后通过 Unity Test Runner 的 **PlayMode** 页面运行测试。`0.5.0` 包含 5 项 UI、6 项 InputRouter、3 项 InputSource、7 项 RuntimeConfig、6 项 RuntimeSettings、12 项 UDP 和 8 项 StateMachine 测试，共 47 项。

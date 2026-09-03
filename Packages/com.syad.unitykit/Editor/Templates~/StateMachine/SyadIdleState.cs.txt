@@ -1,0 +1,33 @@
+using Syad.UnityKit.StateMachine;
+using UnityEngine;
+
+namespace SyadUnityKit.Generated
+{
+    /// <summary>
+    /// 默认空闲状态。请按项目需要修改或替换为自己的状态。
+    /// </summary>
+    public sealed class SyadIdleState : SyadState
+    {
+        public SyadIdleState(
+            SyadStateMachineController controller,
+            StateMachine<SyadState> stateMachine)
+            : base(controller, stateMachine)
+        {
+        }
+
+        public override void Enter()
+        {
+            Debug.Log("SYAD StateMachine：进入空闲状态。", Controller);
+        }
+
+        public override void Update()
+        {
+            // 在这里处理空闲状态的逐帧逻辑。
+        }
+
+        public override void Exit()
+        {
+            Debug.Log("SYAD StateMachine：退出空闲状态。", Controller);
+        }
+    }
+}
