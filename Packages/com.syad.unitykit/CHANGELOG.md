@@ -1,5 +1,19 @@
 # 变更日志
 
+## 0.5.0 - 2026-09-02
+
+- 新增 `Syad.UnityKit.StateMachine.IState` 通用状态生命周期接口。
+- 新增 `StateMachine<TState>`，提供 `Initialize`、`ChangeState`、`Update` 和 `Stop` 基础能力。
+- 切换到当前同一状态实例时，仍会完整执行 `Exit → Enter`。
+- 新增 StateMachine Editor 一键模板，生成项目状态基类、空闲状态和控制器，并自动创建场景对象。
+- 新增独立 StateMachine Demo、中文设计文档和 8 项 PlayMode 测试。
+- 包内运行时测试总数达到 47 项。
+
+### 0.5.0 发布边界
+
+- StateMachine 模块只提供 `Initialize`、`ChangeState`、`Update`、`Stop` 以及 `Enter / Update / Exit` 生命周期，不自动注册状态或决定转换条件。
+- StateMachine 模板生成的脚本属于项目 `Assets`，使用者可以继续修改，不会被 UPM Runtime 自动覆盖。
+
 ## 0.4.0 - 2026-08-25
 
 - 新增 `Syad.UnityKit.Networking.UdpReceiverBehaviour` 零编码 UDP 文本接收组件。

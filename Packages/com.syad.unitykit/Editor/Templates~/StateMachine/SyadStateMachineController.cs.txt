@@ -1,0 +1,56 @@
+using Syad.UnityKit.StateMachine;
+using UnityEngine;
+
+namespace SyadUnityKit.Generated
+{
+    /// <summary>
+    /// 状态机组合入口。请在这里创建项目状态，并决定什么时候切换状态。
+    /// </summary>
+    public sealed class SyadStateMachineController : MonoBehaviour
+    {
+        private StateMachine<SyadState> _stateMachine;
+        private SyadIdleState _idleState;
+
+        private void Awake()
+        {
+            _stateMachine = new StateMachine<SyadState>();
+            _idleState = new SyadIdleState(this, _stateMachine);
+            _stateMachine.Initialize(_idleState);
+        }
+
+        private void Update()
+        {
+            _stateMachine.Update();
+        }
+
+        /// <summary>
+        /// 切换到项目创建的新状态。状态必须继承 SyadState。
+        /// </summary>
+        public void ChangeState(SyadState nextState)
+        {
+            if (_stateMachine == null)
+            {
+                Debug.LogWarning(
+                    "SYAD StateMachine：状态机尚未初始化。",
+                    this);
+                return;
+            }
+
+            _stateMachine.ChangeState(nextState);
+        }
+
+        /// <summary>停止状态机并退出当前状态。</summary>
+        public void StopStateMachine()
+        {
+            if (_stateMachine != null)
+            {
+                _stateMachine.Stop();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            StopStateMachine();
+        }
+    }
+}

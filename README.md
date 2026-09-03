@@ -1,6 +1,6 @@
 # SYAD Unity Kit
 
-SYAD Unity Kit 是一套小型、显式、便于理解和扩展的 Unity 运行时基础框架。`0.4.0` 提供 UI 生命周期管理、强类型输入源与命令路由、零编码 UDP 文本接收、运行时配置读取，以及 Windows Player 现场运行设置。
+SYAD Unity Kit 是一套小型、显式、便于理解和扩展的 Unity 运行时基础框架。`0.5.0` 提供 UI 生命周期管理、强类型输入源与命令路由、通用状态机、零编码 UDP 文本接收、运行时配置读取，以及 Windows Player 现场运行设置。
 
 支持 Unity **2019.4 LTS 及以上版本**，并保持与 Unity 2022.3 LTS 兼容。
 
@@ -10,6 +10,7 @@ SYAD Unity Kit 是一套小型、显式、便于理解和扩展的 Unity 运行�
 |---|---|---|
 | UI | `Syad.UnityKit.UI` | 页面目录、层级、生命周期、缓存、重复实例和释放策略 |
 | Input | `Syad.UnityKit.Input` | 强类型命令转发、输入启停、全局冷却和冷却重置 |
+| StateMachine | `Syad.UnityKit.StateMachine` | 显式管理状态的 `Enter / Update / Exit` 生命周期 |
 | Networking | `Syad.UnityKit.Networking` | 后台接收 UDP UTF-8 文本并在 Unity 主线程触发事件 |
 | RuntimeConfig | `Syad.UnityKit.RuntimeConfig` | 从显式根目录读取 UTF-8 文本和强类型 JSON 配置 |
 | RuntimeSettings | `Syad.UnityKit.RuntimeSettings` | 零编码加载并应用分辨率、光标和画质设置 |
@@ -20,8 +21,9 @@ SYAD Unity Kit 是一套小型、显式、便于理解和扩展的 Unity 运行�
 详细资料：
 
 - [包使用文档](Packages/com.syad.unitykit/README.md)
+- [StateMachine 设计与使用](Packages/com.syad.unitykit/Documentation~/StateMachine设计方案.md)
 - [InputRouter 详解](Packages/com.syad.unitykit/Documentation~/InputRouter详解.md)
-- [Input 与 UDP 一键创建模板](Packages/com.syad.unitykit/Documentation~/模板创建工具详解.md)
+- [Input、UDP 与 StateMachine 一键创建模板](Packages/com.syad.unitykit/Documentation~/模板创建工具详解.md)
 - [UDP Receiver 详解](Packages/com.syad.unitykit/Documentation~/UdpReceiver详解.md)
 - [RuntimeConfig 详解](Packages/com.syad.unitykit/Documentation~/RuntimeConfig详解.md)
 - [RuntimeSettings 与 Windows 窗口控制](Packages/com.syad.unitykit/Documentation~/RuntimeSettings详解.md)
@@ -43,7 +45,7 @@ SYAD Unity Kit 是一套小型、显式、便于理解和扩展的 Unity 运行�
 4. 粘贴下面的地址：
 
 ```text
-https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.4.0
+https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.5.0
 ```
 
 5. 点击 **Add**，等待 Unity 下载并编译完成。
@@ -57,7 +59,7 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 ```json
 {
   "dependencies": {
-    "com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.4.0"
+    "com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.5.0"
   }
 }
 ```
@@ -80,13 +82,13 @@ using Syad.UnityKit.UI;
 框架使用 Git 标签发布稳定版本。更新时，把安装地址末尾的标签改为目标版本：
 
 ```text
-#v0.4.0
+#v0.5.0
 ```
 
-例如安装 `0.4.0`：
+例如安装 `0.5.0`：
 
 ```text
-https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.4.0
+https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.5.0
 ```
 
 建议项目始终指定明确标签，不要直接依赖开发分支，以免框架更新导致项目意外变化。
@@ -98,7 +100,7 @@ https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v
 如果通过 `manifest.json` 安装，则删除下面这一项并保存：
 
 ```json
-"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.4.0"
+"com.syad.unitykit": "https://github.com/ShiYuandi/SyadUnityKit.git?path=/Packages/com.syad.unitykit#v0.5.0"
 ```
 
 卸载前请先移除场景和 Prefab 上依赖本框架的组件，否则 Unity 会显示 Missing Script。
@@ -127,7 +129,7 @@ Tools > SYAD Unity Kit > Input > 创建输入系统模板
 
 工具会在 `Assets/SyadUnityKit/Generated/Input` 生成命令枚举、`SyadInputSource` 桥接类、`KeyboardInputSource`、`UdpInputSource` 和 `SyadInputController`。框架的 `InputSource<TCommand>` 负责通用事件和命令提交，项目侧 `SyadInputSource` 只指定 `SyadInputCommand` 类型。控制器只订阅输入源数组，新增设备不需要增加控制器字段。生成代码属于你的项目，可以直接修改，重复执行菜单不会覆盖。
 
-该模板菜单属于 `0.4.0`，安装 `v0.4.0` 后即可使用。
+该模板菜单自 `0.4.0` 起提供，安装 `v0.5.0` 后即可使用全部模板。
 
 也可以手动定义项目命令，再创建并持有 `InputRouter<TCommand>`：
 
@@ -149,6 +151,41 @@ inputRouter.TryDispatch(ExhibitCommand.Left);
 ```
 
 具体输入源负责把键盘、UDP、RFID、Kinect 等原始信号转换为命令；`InputSource<TCommand>` 提供统一的命令事件；InputRouter 负责启停、冷却和转发；项目 Controller 负责实际业务。详细说明请阅读 [《InputRouter 详解》](Packages/com.syad.unitykit/Documentation~/InputRouter详解.md)。
+
+### StateMachine
+
+项目状态实现 `IState` 的 `Enter()`、`Update()` 和 `Exit()`，再由 Controller 创建和驱动通用状态机：
+
+```csharp
+using Syad.UnityKit.StateMachine;
+
+StateMachine<PlayerState> stateMachine =
+    new StateMachine<PlayerState>();
+
+stateMachine.Initialize(idleState);
+stateMachine.Update();
+stateMachine.ChangeState(moveState);
+stateMachine.Stop();
+```
+
+框架不自动注册状态、读取输入或决定转换条件。详细规则请阅读 [《StateMachine 设计方案》](Packages/com.syad.unitykit/Documentation~/StateMachine设计方案.md)，可运行示例位于 `Assets/Demo/StateMachine`。
+
+第一次接入时，保存场景并执行：
+
+```text
+Tools > SYAD Unity Kit > StateMachine > 创建状态机模板
+```
+
+工具会生成：
+
+```text
+Assets/SyadUnityKit/Generated/StateMachine/
+├─ SyadState.cs
+├─ SyadIdleState.cs
+└─ SyadStateMachineController.cs
+```
+
+同时在当前场景创建 `SYAD StateMachine` 对象。生成脚本属于项目代码，可以直接修改；模板只提供状态基类和空闲状态，不预先生成运行状态。
 
 ### UDP Receiver
 
@@ -206,6 +243,7 @@ SyadUnityKit
 │  └─ Demo
 │     ├─ UI                       UI 页面管理示例
 │     ├─ Input                    输入源与命令路由示例
+│     ├─ StateMachine             通用状态生命周期示例
 │     ├─ RuntimeConfig            零编码运行设置示例
 │     └─ UDP                      UDP 文本接收示例
 ├─ Packages

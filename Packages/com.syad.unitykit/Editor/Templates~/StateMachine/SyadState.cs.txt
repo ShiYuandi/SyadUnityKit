@@ -1,0 +1,25 @@
+using Syad.UnityKit.StateMachine;
+
+namespace SyadUnityKit.Generated
+{
+    /// <summary>
+    /// 项目状态基类。请在这里增加所有状态共享的项目依赖。
+    /// </summary>
+    public abstract class SyadState : IState
+    {
+        protected SyadStateMachineController Controller { get; private set; }
+        protected StateMachine<SyadState> StateMachine { get; private set; }
+
+        protected SyadState(
+            SyadStateMachineController controller,
+            StateMachine<SyadState> stateMachine)
+        {
+            Controller = controller;
+            StateMachine = stateMachine;
+        }
+
+        public abstract void Enter();
+        public abstract void Update();
+        public abstract void Exit();
+    }
+}

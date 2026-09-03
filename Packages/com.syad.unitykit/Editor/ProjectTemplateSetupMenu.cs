@@ -22,6 +22,8 @@ namespace Syad.UnityKit.Editor
             "Tools/SYAD Unity Kit/Input/创建输入系统模板";
         private const string UdpMenuPath =
             "Tools/SYAD Unity Kit/Networking/创建 UDP 接收器";
+        private const string StateMachineMenuPath =
+            "Tools/SYAD Unity Kit/StateMachine/创建状态机模板";
 
         private const string GeneratedRoot =
             "Assets/SyadUnityKit/Generated";
@@ -29,6 +31,8 @@ namespace Syad.UnityKit.Editor
             GeneratedRoot + "/Input";
         private const string NetworkingGeneratedDirectory =
             GeneratedRoot + "/Networking";
+        private const string StateMachineGeneratedDirectory =
+            GeneratedRoot + "/StateMachine";
 
         private const string InputCommandTypeName =
             "SyadUnityKit.Generated.SyadInputCommand";
@@ -42,6 +46,8 @@ namespace Syad.UnityKit.Editor
             "SyadUnityKit.Generated.SyadInputController";
         private const string UdpControllerTypeName =
             "SyadUnityKit.Generated.SyadUdpReceiverController";
+        private const string StateMachineControllerTypeName =
+            "SyadUnityKit.Generated.SyadStateMachineController";
 
         private const string PendingOperationKey =
             "Syad.UnityKit.Editor.PendingTemplateOperation";
@@ -51,6 +57,7 @@ namespace Syad.UnityKit.Editor
             "Syad.UnityKit.Editor.PendingTemplateWaitForCompilation";
         private const string InputOperation = "Input";
         private const string UdpOperation = "Udp";
+        private const string StateMachineOperation = "StateMachine";
 
         private static readonly UTF8Encoding Utf8WithoutBom =
             new UTF8Encoding(false);
@@ -102,6 +109,31 @@ namespace Syad.UnityKit.Editor
             };
 
             GenerateAndSchedule(UdpOperation, files);
+        }
+
+        [MenuItem(StateMachineMenuPath, false, 120)]
+        private static void CreateStateMachineTemplate()
+        {
+            if (!TryBeginOperation(StateMachineOperation))
+            {
+                return;
+            }
+
+            TemplateFile[] files =
+            {
+                new TemplateFile(
+                    "StateMachine/SyadState.cs.txt",
+                    StateMachineGeneratedDirectory + "/SyadState.cs"),
+                new TemplateFile(
+                    "StateMachine/SyadIdleState.cs.txt",
+                    StateMachineGeneratedDirectory + "/SyadIdleState.cs"),
+                new TemplateFile(
+                    "StateMachine/SyadStateMachineController.cs.txt",
+                    StateMachineGeneratedDirectory
+                    + "/SyadStateMachineController.cs")
+            };
+
+            GenerateAndSchedule(StateMachineOperation, files);
         }
 
         /// <summary>
@@ -310,7 +342,9 @@ namespace Syad.UnityKit.Editor
 
             bool completed = operation == InputOperation
                 ? TryCreateInputSceneObject()
-                : TryCreateUdpSceneObject();
+                : operation == UdpOperation
+                    ? TryCreateUdpSceneObject()
+                    : TryCreateStateMachineSceneObject();
             if (!completed)
             {
                 bool waitingForCompilation = SessionState.GetBool(
@@ -456,6 +490,40 @@ namespace Syad.UnityKit.Editor
                 createdObject
                     ? "SYAD UDP：接收器和处理模板创建完成，默认监听端口为 15000。"
                     : "SYAD UDP：已找到现有接收器，并补齐所需组件。"
+            );
+            return true;
+        }
+
+        private static bool TryCreateStateMachineSceneObject()
+        {
+            Type controllerType =
+                FindComponentType(StateMachineControllerTypeName);
+            if (controllerType == null)
+            {
+                return false;
+            }
+
+            GameObject gameObject =
+                FindSceneObjectWithComponent(controllerType);
+            bool createdObject = gameObject == null;
+            if (createdObject)
+            {
+                gameObject = new GameObject("SYAD StateMachine");
+                Undo.RegisterCreatedObjectUndo(
+                    gameObject,
+                    "创建 SYAD 状态机");
+            }
+
+            if (gameObject.GetComponent(controllerType) == null)
+            {
+                Undo.AddComponent(gameObject, controllerType);
+            }
+
+            FinishSceneObjectCreation(
+                gameObject,
+                createdObject
+                    ? "SYAD StateMachine：状态机模板创建完成。"
+                    : "SYAD StateMachine：已找到现有状态机对象。"
             );
             return true;
         }
